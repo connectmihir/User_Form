@@ -22,6 +22,8 @@
         $Email =$_POST["Email"];
         $password =$_POST["password"];
 
+        $passwordHash = password_hash($password, PASSWORD_DEFAULT);
+
         $errors=array();
 
         // For error message
@@ -36,6 +38,20 @@
             array_push($errors, "Too short password, use more than 8 charcter");
         }
 
+//For avoiding the same user email id
+
+          require_once "database.php";
+
+$sql ="SELECT *FROM user WHERE  email='$Email'";
+$result =mysqli_query($conn, $sql);
+$rowcount =mysqli_num_rows($result);
+if ($rowcount>0){
+    array_push($errors, "Email Already exist");
+}
+
+
+
+
         if(count($errors)>0){
             foreach ($errors as $errors){
                 echo "<div class='alert alert-danger'>$errors</div>";
@@ -43,10 +59,24 @@
 
         }
         else{
-            // WE will update the database
-        }
+       
+
+$sql = "INSERT INTO user (fullname, email, password) VALUES (?, ?, ?)";
+$stmt = mysqli_prepare($conn, $sql);
+
+if ($stmt) {
+    
+    mysqli_stmt_bind_param($stmt, "sss", $fullname, $Email, $passwordHash);
+    mysqli_stmt_execute($stmt);
+
+    echo "<div class='alert alert-success'>You have registered successfully.</div>";
+} 
+else {
+    die("SQL prepare failed");
+}
       
     }
+}
 
     ?>
     <form action="register.php" method="post">
